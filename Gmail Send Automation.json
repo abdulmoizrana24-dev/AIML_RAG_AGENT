@@ -1,0 +1,184 @@
+{
+  "name": "Gmail Send Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -272,
+        -48
+      ],
+      "id": "0b026fbe-0b78-440c-9110-85030385e432",
+      "name": "When chat message received",
+      "webhookId": "62410809-c208-4a01-aa24-7195a0a8db91"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are an automation-focused AI agent responsible for sending emails to customers using Google Contacts.\n\nYour task must strictly follow the steps below. Do NOT skip or reorder steps.\n\nRULES & OBJECTIVES:\n1. You will receive the Customer Name and Email Context from the user prompt.\n2. You MUST search Google Contacts to find the customer.\n3. You MUST extract:\n   - Full Name\n   - Email Address\n4. Only ONE email address must be found.\n5. The email address MUST exist in Google Contacts.\n6. If:\n   - No contact is found\n   - More than one email address is found\n   - Email field is empty or unclear  \n   → STOP immediately and respond with an error message. DO NOT send the email.\n\nVALIDATION RULES:\n- Never guess or generate an email address.\n- Never send an email without confirming the email address from Google Contacts.\n- The contact lookup must complete successfully before moving forward.\n\nPROCESS FLOW:\nStep 1: Receive input:\n   - Customer Name\n   - Email content (subject + body)\n\nStep 2: Search Google Contacts using the provided Customer Name.\n\nStep 3: Validate results:\n   - Exactly ONE matching contact\n   - Exactly ONE email address\n\nStep 4: If validation passes:\n   - Use the retrieved email address\n   - Send the email using the provided subject and body\n\nStep 5: Confirm success with:\n   - Customer Name\n   - Email Address used\n   - Email sent status\n\nERROR HANDLING:\nIf validation fails, return a clear message such as:\n- \"No contact found for the provided name.\"\n- \"Multiple email addresses found. Email not sent.\"\n- \"Email address missing in contact.\"\n\nIMPORTANT:\n- Accuracy is more important than completion.\n- It is better to stop than to send an incorrect email.\n- Do not assume or infer missing data.\n\nYou are not a chatbot. You are an execution-based automation agent.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -64,
+        -48
+      ],
+      "id": "5bdd1548-9500-4046-8854-824cbd45d77c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        128
+      ],
+      "id": "240587da-9ac1-4a1a-be06-20d20e2f9ebc",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "bzR7iyN9BXC4616t",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        208
+      ],
+      "id": "07597343-ae60-4bc7-a107-c742f02fdd63",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        160
+      ],
+      "id": "f4a020f3-6081-4e63-8cb5-d61abc9b57a3",
+      "name": "Send a message in Gmail",
+      "webhookId": "a9b8939c-9135-4739-801b-0ae972be7012",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ExP4BUAL1qicTfMU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "fields": [
+          "emailAddresses",
+          "names"
+        ],
+        "useQuery": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Use_Query', ``, 'boolean') }}",
+        "rawData": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('RAW_Data', ``, 'boolean') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleContactsTool",
+      "typeVersion": 1,
+      "position": [
+        272,
+        176
+      ],
+      "id": "75b607fb-8802-4772-95eb-54177e97b2dd",
+      "name": "Get many contacts in Google Contacts",
+      "credentials": {
+        "googleContactsOAuth2Api": {
+          "id": "N9HzaJIfhJA2BOKu",
+          "name": "Google Contacts account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many contacts in Google Contacts": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "c173408c-0757-4c4b-9c17-65a729222fd5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "123114ae046c6eaca2f1b9c2969e9494ea5b32a41e37353a7c6f18177e73c536"
+  },
+  "id": "CAvc3M7dEmXb3V2c",
+  "tags": []
+}
